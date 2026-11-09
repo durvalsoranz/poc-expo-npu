@@ -1,6 +1,13 @@
 import { StatusBar } from 'expo-status-bar';
 import { useMemo, useState } from 'react';
-import { PanResponder, Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  PanResponder,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
 
 const API_URL = 'http://192.168.0.252:8000';
@@ -43,8 +50,13 @@ export default function App() {
   const [showEmptyWarning, setShowEmptyWarning] = useState(false);
   const [result, setResult] = useState<InferenceResult | null>(null);
   const [requestError, setRequestError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const classifyStrokes = async () => {
+    if (isLoading) {
+      return;
+    }
+
     if (strokes.length === 0) {
       setShowEmptyWarning(true);
       return;
@@ -53,6 +65,7 @@ export default function App() {
     setShowEmptyWarning(false);
     setResult(null);
     setRequestError(null);
+    setIsLoading(true);
     const startedAt = Date.now();
 
     try {
@@ -94,6 +107,8 @@ export default function App() {
       setResult({ ...payload, roundTripMs });
     } catch {
       setRequestError('Não foi possível conectar à API.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -192,12 +207,25 @@ export default function App() {
         </Pressable>
         <Pressable
           accessibilityRole="button"
+          accessibilityState={{ disabled: isLoading }}
+          disabled={isLoading}
           onPress={() => void classifyStrokes()}
-          style={[styles.actionButton, styles.classifyButton]}
+          style={[
+            styles.actionButton,
+            styles.classifyButton,
+            isLoading && styles.disabledButton,
+          ]}
         >
           <Text style={styles.buttonText}>Classificar</Text>
         </Pressable>
       </View>
+      {isLoading && (
+        <ActivityIndicator
+          accessibilityLabel="Classificando"
+          color="#172033"
+          style={styles.loadingIndicator}
+        />
+      )}
       {showEmptyWarning && (
         <Text accessibilityRole="alert" style={styles.warning}>
           Desenhe um dígito primeiro
@@ -273,6 +301,13 @@ const styles = StyleSheet.create({
   },
   classifyButton: {
     backgroundColor: '#172033',
+  },
+  disabledButton: {
+    backgroundColor: '#9aa3b2',
+    opacity: 0.65,
+  },
+  loadingIndicator: {
+    marginTop: 12,
   },
   buttonText: {
     color: '#fff',
