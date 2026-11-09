@@ -51,6 +51,18 @@ Mesmo prompt de mapa do tema, rodado no Claude (com busca na web) e no Gemini.
 | Armadilhas de rede | Levanta HTTP sem TLS no Android e permissão de rede local no iOS (não confirmadas) | Não aborda | Android confirmado: a partir da API 28, tráfego em texto claro é bloqueado por padrão (`usesCleartextTraffic`). Novo: o iOS também exige HTTPS por padrão (App Transport Security), com exceção via `Info.plist`. Permissão de rede local no iOS: não aparece na página. [a confirmar no aparelho] |
 | Link do TanStack Query | Página específica de React Native | Visão geral do framework React | Confirmado: a página de React Native é a que trata do `onlineManager` (com NetInfo ou `expo-network`) e do `focusManager`. O link v5 redireciona para `/query/latest/docs/framework/react/react-native`. |
 
+## Comparação das libs de desenho (prompt de comparação)
+Prompt de comparação da apostila, com as colunas pedidas. Mesma legenda: **[doc]** = confirmado na página oficial; **[IA]** = veio da IA, a página não diz.
+
+| Lib | Funciona no Expo Go | Android e iOS | Complexidade de uso | Limitações conhecidas |
+|-----|---------------------|---------------|---------------------|-----------------------|
+| `react-native-svg` | Sim [doc: selo, versão 15.16.0] | Sim [doc] | Baixa: `PanResponder` + `Path`; 28x28 rasterizado em JS a partir dos pontos [IA] | Coordenadas do `PanResponder` são de tela e precisam de conversão [doc]; não lê pixels da tela diretamente [IA]; muitos pontos podem pesar em aparelhos fracos [IA] |
+| `@shopify/react-native-skia` | Sim [doc: selo, versão 2.14.0] | Sim [doc] | Média a alta: API gráfica própria [IA] | Versão no Expo Go pode ficar atrás da lib (artigo de 2024, fonte não oficial) [IA] |
+| `react-native-view-shot` | Sim [doc: selo, versão 6.1.1] | Sim [doc] | Baixa para capturar, alta para chegar ao 28x28 [IA] | Gera imagem em arquivo (exemplo com PNG e `tmpfile`) [doc]; precisaria ser decodificada para 28x28 [IA]; a página cita o caso de assinatura e permite fixar o tamanho em pixels [doc] |
+| `react-native-webview` | Sim [doc: selo, versão 14.0.1] | Sim [doc] | Média: HTML + `<canvas>` + troca de mensagens [IA] | Dois ambientes JS para depurar [IA]; um tutorial de terceiros (2026) diz que não roda no Expo Go no iOS 18+, contradizendo o selo da página oficial [IA, fonte não oficial; testar no aparelho] |
+
+Conclusão: as quatro funcionam no Expo Go [doc]. A escolha de `react-native-svg` se apoia na menor complexidade e em não precisar decodificar imagem, e esses dois pontos são [IA], a confirmar na construção.
+
 ## Achados da leitura das fontes
 1. **view-shot cita o nosso caso.** A página do Expo menciona assinatura (usuário desenha, app salva imagem) e mostra como fixar largura/altura em pixels físicos, dividindo pelo `PixelRatio`. Continua fora da PoC por exigir decodificação, mas o argumento deve ser esse, e não "as IAs concordam".
 2. **Coordenadas do PanResponder.** `moveX`/`moveY` são de tela; converter para o sistema do canvas antes de montar o `Path` e o 28x28.
