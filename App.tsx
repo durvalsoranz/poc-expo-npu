@@ -15,6 +15,7 @@ const STROKE_WIDTH = 12;
 export default function App() {
   const [strokes, setStrokes] = useState<Stroke[]>([]);
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
+  const [showEmptyWarning, setShowEmptyWarning] = useState(false);
 
   const panResponder = useMemo(
     () =>
@@ -22,6 +23,7 @@ export default function App() {
         onStartShouldSetPanResponder: () => true,
         onMoveShouldSetPanResponder: () => true,
         onPanResponderGrant: ({ nativeEvent }) => {
+          setShowEmptyWarning(false);
           setStrokes((current) => [
             ...current,
             [{ x: nativeEvent.locationX, y: nativeEvent.locationY }],
@@ -95,13 +97,34 @@ export default function App() {
         </Svg>
       </View>
 
-      <Pressable
-        accessibilityRole="button"
-        onPress={() => setStrokes([])}
-        style={styles.clearButton}
-      >
-        <Text style={styles.clearButtonText}>Limpar</Text>
-      </Pressable>
+      <View style={styles.buttonRow}>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => {
+            setStrokes([]);
+            setShowEmptyWarning(false);
+          }}
+          style={[styles.actionButton, styles.clearButton]}
+        >
+          <Text style={styles.buttonText}>Limpar</Text>
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => {
+            if (strokes.length === 0) {
+              setShowEmptyWarning(true);
+            }
+          }}
+          style={[styles.actionButton, styles.classifyButton]}
+        >
+          <Text style={styles.buttonText}>Classificar</Text>
+        </Pressable>
+      </View>
+      {showEmptyWarning && (
+        <Text accessibilityRole="alert" style={styles.warning}>
+          Desenhe um dígito primeiro
+        </Text>
+      )}
 
       <StatusBar style="auto" />
     </View>
@@ -138,17 +161,32 @@ const styles = StyleSheet.create({
   stroke: {
     color: '#172033',
   },
-  clearButton: {
-    alignItems: 'center',
-    backgroundColor: '#172033',
-    borderRadius: 12,
-    justifyContent: 'center',
+  buttonRow: {
+    flexDirection: 'row',
+    gap: 12,
     marginTop: 16,
+  },
+  actionButton: {
+    alignItems: 'center',
+    borderRadius: 12,
+    flex: 1,
+    justifyContent: 'center',
     minHeight: 52,
   },
-  clearButtonText: {
+  clearButton: {
+    backgroundColor: '#5d6678',
+  },
+  classifyButton: {
+    backgroundColor: '#172033',
+  },
+  buttonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  warning: {
+    color: '#b42318',
+    fontSize: 14,
+    marginTop: 8,
   },
 });
