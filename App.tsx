@@ -3,6 +3,8 @@ import { useMemo, useState } from 'react';
 import { PanResponder, Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
 
+const API_URL = 'http://192.168.0.252:8000';
+
 type Point = {
   x: number;
   y: number;
@@ -10,12 +12,90 @@ type Point = {
 
 type Stroke = Point[];
 
+type InferenceResponse = {
+  digito: number;
+  backend: 'FPGA' | 'simulado';
+  tempo_ms: number;
+};
+
+type InferenceResult = InferenceResponse & {
+  roundTripMs: number;
+};
+
 const STROKE_WIDTH = 12;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function isInferenceResponse(value: unknown): value is InferenceResponse {
+  return (
+    isRecord(value) &&
+    typeof value.digito === 'number' &&
+    (value.backend === 'FPGA' || value.backend === 'simulado') &&
+    typeof value.tempo_ms === 'number'
+  );
+}
 
 export default function App() {
   const [strokes, setStrokes] = useState<Stroke[]>([]);
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
   const [showEmptyWarning, setShowEmptyWarning] = useState(false);
+  const [result, setResult] = useState<InferenceResult | null>(null);
+  const [requestError, setRequestError] = useState<string | null>(null);
+
+  const classifyStrokes = async () => {
+    if (strokes.length === 0) {
+      setShowEmptyWarning(true);
+      return;
+    }
+
+    setShowEmptyWarning(false);
+    setResult(null);
+    setRequestError(null);
+    const startedAt = Date.now();
+
+    try {
+      const response = await fetch(`${API_URL}/infer`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          tracos: strokes.map((stroke) =>
+            stroke.map(({ x, y }) => [x, y]),
+          ),
+        }),
+      });
+
+      let payload: unknown;
+      try {
+        payload = await response.json();
+      } catch {
+        setRequestError('Resposta inválida da API.');
+        return;
+      }
+
+      const roundTripMs = Date.now() - startedAt;
+      if (!response.ok) {
+        setRequestError(
+          isRecord(payload) && typeof payload.erro === 'string'
+            ? payload.erro
+            : `Erro na API (${response.status}).`,
+        );
+        return;
+      }
+
+      if (!isInferenceResponse(payload)) {
+        setRequestError('Resposta inválida da API.');
+        return;
+      }
+
+      setResult({ ...payload, roundTripMs });
+    } catch {
+      setRequestError('Não foi possível conectar à API.');
+    }
+  };
 
   const panResponder = useMemo(
     () =>
@@ -103,6 +183,8 @@ export default function App() {
           onPress={() => {
             setStrokes([]);
             setShowEmptyWarning(false);
+            setResult(null);
+            setRequestError(null);
           }}
           style={[styles.actionButton, styles.clearButton]}
         >
@@ -110,11 +192,7 @@ export default function App() {
         </Pressable>
         <Pressable
           accessibilityRole="button"
-          onPress={() => {
-            if (strokes.length === 0) {
-              setShowEmptyWarning(true);
-            }
-          }}
+          onPress={() => void classifyStrokes()}
           style={[styles.actionButton, styles.classifyButton]}
         >
           <Text style={styles.buttonText}>Classificar</Text>
@@ -124,6 +202,23 @@ export default function App() {
         <Text accessibilityRole="alert" style={styles.warning}>
           Desenhe um dígito primeiro
         </Text>
+      )}
+      {requestError && (
+        <Text accessibilityRole="alert" style={styles.error}>
+          {requestError}
+        </Text>
+      )}
+      {result && (
+        <View style={styles.result}>
+          <Text style={styles.resultText}>Dígito previsto: {result.digito}</Text>
+          <Text style={styles.resultText}>Backend: {result.backend}</Text>
+          <Text style={styles.resultText}>
+            Tempo de resposta (app): {result.roundTripMs} ms
+          </Text>
+          <Text style={styles.resultText}>
+            Tempo da NPU: {result.tempo_ms} ms
+          </Text>
+        </View>
       )}
 
       <StatusBar style="auto" />
@@ -188,5 +283,18 @@ const styles = StyleSheet.create({
     color: '#b42318',
     fontSize: 14,
     marginTop: 8,
+  },
+  error: {
+    color: '#b42318',
+    fontSize: 14,
+    marginTop: 8,
+  },
+  result: {
+    gap: 4,
+    marginTop: 12,
+  },
+  resultText: {
+    color: '#172033',
+    fontSize: 14,
   },
 });

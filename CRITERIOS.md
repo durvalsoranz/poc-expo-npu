@@ -1,7 +1,7 @@
 # Critérios de aceitação
 
 - [x] Ao arrastar o dedo na área de desenho, o traço aparece na tela em tempo real; ao tocar em "Limpar", a área fica vazia.
-- [ ] Com o servidor ligado e um "3" desenhado, ao tocar em "Classificar" aparecem, em até 3 segundos, o dígito previsto, o backend usado ("FPGA" ou "simulado") e o tempo de resposta em ms.
+- [x] Com o servidor ligado e um "3" desenhado, ao tocar em "Classificar" aparecem, em até 3 segundos, o dígito previsto, o backend usado ("FPGA" ou "simulado") e o tempo de resposta em ms.
 - [ ] Dos 10 dígitos (0 a 9) desenhados um por vez, pelo menos 7 são classificados corretamente.
 - [ ] Durante a requisição, o botão "Classificar" fica desabilitado e aparece um indicador de carregamento; ao terminar, o botão volta ao normal.
 - [ ] Com a área de desenho vazia, "Classificar" não envia nada e mostra o aviso "Desenhe um dígito primeiro".
