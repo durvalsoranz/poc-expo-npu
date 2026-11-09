@@ -1,8 +1,8 @@
 """
-API ponte do Eureka: recebe pela rede o dígito desenhado no celular e o classifica na NPU.
+API ponte da NPU: recebe pela rede o dígito desenhado no celular e o classifica na NPU.
 
 O celular não fala UART com a placa. Este servidor roda no computador ligado à FPGA, recebe o
-desenho por HTTP e reaproveita o código do Eureka (Digit-Tracker): o mesmo pré-processamento 28x28
+desenho por HTTP e reaproveita o código do Digit-Tracker: o mesmo pré-processamento 28x28
 (vision.to_npu_input) e os mesmos backends de inferência (npu.CpuNpu e npu.FpgaNpu).
 
     python bridge/servidor.py --sim            # NPU emulada no computador (sem placa)
@@ -24,7 +24,7 @@ import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
-EUREKA_PADRAO = os.path.normpath(os.path.join(AQUI, "..", "..", "Digit Tracker", "digit-tracker"))
+DIGIT_TRACKER_PADRAO = os.path.normpath(os.path.join(AQUI, "..", "..", "Digit Tracker", "digit-tracker"))
 
 MAX_CORPO = 1_000_000   # bytes aceitos no corpo da requisição
 MAX_PONTOS = 20_000     # pontos somados de todos os traços
@@ -69,7 +69,7 @@ class Ponte:
                 if not (isinstance(p, (list, tuple)) and len(p) == 2
                         and all(isinstance(v, (int, float)) for v in p)):
                     raise ErroEntrada("Cada ponto deve ser [x, y] com números.")
-                pontos.append((int(round(p[0])), int(round(p[1]))))  # o Eureka trabalha com pixels inteiros
+                pontos.append((int(round(p[0])), int(round(p[1]))))  # o Digit-Tracker trabalha com pixels inteiros
             total += len(pontos)
             convertidos.append(pontos)
         if total > MAX_PONTOS:
@@ -89,7 +89,7 @@ class Ponte:
         img28 = np.array(pixels, np.uint8)
         if not img28.any():
             raise ErroEntrada("Desenhe um dígito primeiro: a imagem está toda preta.")
-        # Mesma redução do Eureka: 0..255 -> 0..127 em int8
+        # Mesma redução do Digit-Tracker: 0..255 -> 0..127 em int8
         return np.clip(img28 // 2, 0, 127).astype(np.int8), img28
 
     def inferir(self, corpo):
@@ -119,7 +119,7 @@ class Ponte:
 
 def criar_handler(ponte, info_health):
     class Handler(BaseHTTPRequestHandler):
-        server_version = "EurekaPonte/1.0"
+        server_version = "PonteNPU/1.0"
 
         def _responder(self, status, dados):
             corpo = json.dumps(dados, ensure_ascii=False).encode("utf-8")
@@ -180,21 +180,21 @@ def main():
     parser.add_argument("--sim", action="store_true", help="sem placa: emula a NPU no computador")
     parser.add_argument("--port", help="porta serial da FPGA (padrão: detectada automaticamente)")
     parser.add_argument("--baud", type=int, default=921600)
-    parser.add_argument("--eureka", default=EUREKA_PADRAO, help="pasta do Digit-Tracker (Eureka)")
+    parser.add_argument("--digit-tracker", default=DIGIT_TRACKER_PADRAO, help="pasta do Digit-Tracker")
     parser.add_argument("--host", default="0.0.0.0", help="0.0.0.0 aceita conexões da rede local")
     parser.add_argument("--porta-http", type=int, default=8000)
     args = parser.parse_args()
 
-    if not os.path.exists(os.path.join(args.eureka, "npu.py")):
-        sys.exit(f"Eureka não encontrado em: {args.eureka}\nUse --eureka com a pasta do digit-tracker.")
-    sys.path.insert(0, args.eureka)
+    if not os.path.exists(os.path.join(args.digit_tracker, "npu.py")):
+        sys.exit(f"Digit-Tracker não encontrado em: {args.digit_tracker}\nUse --digit-tracker com a pasta dele.")
+    sys.path.insert(0, args.digit_tracker)
 
     import numpy as np
     from engine import find_fpga_port, softmax_pct
     from npu import CpuNpu, FpgaNpu, load_weights
     from vision import to_npu_input
 
-    weights = load_weights(os.path.join(args.eureka, "weights.npz"))
+    weights = load_weights(os.path.join(args.digit_tracker, "weights.npz"))
 
     if args.sim:
         backend, nome = CpuNpu(weights), "simulado"
@@ -206,7 +206,7 @@ def main():
             if not porta:
                 sys.exit("Nenhuma porta USB-serial encontrada. Conecte a FPGA, use --port ou rode com --sim.")
             print(f"Portas USB-serial: {', '.join(encontradas)} -> usando {porta} (outra: --port)")
-        firmware = os.path.join(args.eureka, "firmware", "cnn_server.bin")
+        firmware = os.path.join(args.digit_tracker, "firmware", "cnn_server.bin")
         backend, nome = FpgaNpu(porta, args.baud, firmware, weights, log=print), "FPGA"
         detalhe = f"{porta} @ {args.baud} baud"
 
@@ -215,7 +215,7 @@ def main():
     servidor = ThreadingHTTPServer((args.host, args.porta_http), criar_handler(ponte, info_health))
 
     ip = ip_local()
-    print(f"\nPonte do Eureka pronta [{nome}: {detalhe}]")
+    print(f"\nPonte da NPU pronta [{nome}: {detalhe}]")
     print(f"  No computador: http://127.0.0.1:{args.porta_http}/health")
     print(f"  No celular:    http://{ip}:{args.porta_http}/health")
     print("Ctrl+C para encerrar.\n", flush=True)

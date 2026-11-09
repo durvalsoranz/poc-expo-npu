@@ -50,11 +50,11 @@ Docs: https://docs.expo.dev/eas/index.md
 
 ## Contexto desta prova de conceito
 
-- TCC: plataforma educacional com um SoC RISC-V e uma NPU em FPGA, controlada por um app desktop PyQt5 (GUI-TCC). O Eureka (Digit-Tracker) reconhece dígitos desenhados no ar e os classifica na NPU por UART.
-- Problema: o celular não fala UART com a placa. A PoC investiga como um app Expo pode ser a entrada do Eureka, enviando o dígito desenhado a uma API ponte no computador e mostrando a predição da NPU.
+- TCC: criação de uma NPU em FPGA, parte de uma plataforma educacional com um SoC RISC-V. O Digit-Tracker, um app Python do TCC, classifica dígitos desenhados com uma CNN que roda na NPU. Nesta PoC a NPU roda na versão simulada, no computador.
+- Problema: a NPU roda no computador (simulada, ou na FPGA por UART), não no celular. A PoC investiga como um app Expo pode ser a entrada da NPU, enviando o dígito desenhado a uma API ponte no computador e mostrando a predição.
 - Tecnologia investigada: desenho com `react-native-svg` + `PanResponder` e consumo de API com `fetch` (timeout com `AbortController`).
 - Uma tela só, em `App.tsx`: o usuário desenha um dígito com o dedo, toca em "Classificar" e vê o dígito previsto, o backend (FPGA ou simulado) e o tempo de resposta. Há também o botão "Limpar".
-- A imagem enviada é 28x28, em tons de cinza (0 a 255), como lista de 784 inteiros em JSON, com tinta clara sobre fundo escuro, igual ao MNIST. A rasterização é feita em JavaScript puro, sem bibliotecas nativas.
+- O app envia os traços, não a imagem: `POST /infer` com JSON `{"tracos": [[[x, y], ...], ...]}`, um traço por toque contínuo do dedo, em coordenadas da área de desenho. A ponte aplica o pré-processamento 28x28 do Digit-Tracker. A resposta tem `digito`, `backend` ("FPGA" ou "simulado"), `tempo_ms`, `confianca`, `logits` e `entrada`; erros vêm como `{"erro": "..."}`. O contrato completo está em `bridge/README.md`.
 - O endereço da API ponte fica em uma constante no topo do `App.tsx` (IP do computador na rede local, porta 8000).
 - A API ponte é um script Python separado, em `bridge/`, fora do app Expo. Não a reescreva dentro do app.
 - Não usar Expo Router, a menos que a tecnologia investigada seja a navegação.

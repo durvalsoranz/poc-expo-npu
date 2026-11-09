@@ -1,10 +1,10 @@
 # Diário de pesquisa
 
 ## Contexto do TCC
-Plataforma educacional baseada em um SoC RISC-V com NPU (matriz sistólica) em FPGA, controlada por um app desktop PyQt5 (GUI-TCC) com experimentos de arquitetura, sistema operacional e redes neurais. O Eureka (Digit-Tracker) classifica dígitos desenhados no ar com uma CNN que roda na NPU, com a imagem enviada por UART a 921600 baud.
+O TCC consistiu em criar uma NPU (matriz sistólica) em FPGA, parte de uma plataforma educacional baseada em um SoC RISC-V e controlada por um app desktop PyQt5 (GUI-TCC). O Digit-Tracker, apresentado no Eureka (evento de apresentação de TCCs), classifica dígitos desenhados no ar com uma CNN que roda na NPU. Nesta PoC uso a versão simulada da NPU (`CpuNpu`, que reproduz no computador a aritmética int8 da NPU); na FPGA, a imagem chega por UART a 921600 baud.
 
 ## Pergunta de pesquisa
-Como o Expo (`react-native-svg` + `fetch`) permite desenhar um dígito no celular, enviá-lo a uma API ponte do Eureka e mostrar a predição da NPU, na condição de que a NPU está ligada por UART a um computador e a rede local pode falhar?
+Como o Expo (`react-native-svg` + `fetch`) permite desenhar um dígito no celular, enviá-lo a uma API ponte e mostrar a predição da NPU, na condição de que a NPU roda no computador (simulada, ou na FPGA ligada por UART) e a rede local pode falhar?
 
 ## Alternativas consideradas
 
@@ -69,7 +69,6 @@ Conclusão: as quatro funcionam no Expo Go [doc]. A escolha de `react-native-svg
 3. **iOS também bloqueia HTTP puro.** A ponte na rede local provavelmente será `http://192.168...`; testar no iOS, não só no Android.
 4. **Alternativa ao NetInfo:** `expo-network`, citada na página do TanStack para o `onlineManager`.
 5. **Sem respaldo oficial até aqui:** `AbortController`/timeout no `fetch`, `AbortSignal.timeout()`, rasterização em JS, servidor desligado vs. NetInfo, permissão de rede local no iOS. Todos dependem do teste no aparelho.
-6. **MCP do Expo funcionou com conta [gratuita/paga].** A página do Expo MCP diz que exige plano pago do EAS; a apostila diz que basta conta gratuita. No teste de 09/11, as ferramentas "Expo Documentation Search" e "Read Expo Documentation Page" funcionaram com a conta durvalsoranz.
 
 ## Fontes oficiais lidas
 Marque `[x]` depois de abrir cada página e conferir o que está anotado acima. (Todas abertas e conferidas em 09/11/2026.)
@@ -99,6 +98,6 @@ Marque `[x]` depois de abrir cada página e conferir o que está anotado acima. 
 - O certo: [preencher com o resultado do teste e a versão do SDK]
 
 ## Resultado e próximos passos no TCC
-- Hipótese (a confirmar na PoC): o celular funciona como entrada do Eureka sem falar UART. O traço é rasterizado em 28x28 no próprio app e a API ponte no computador repassa a imagem à NPU.
+- Hipótese (a confirmar na PoC): o celular funciona como entrada da NPU sem rodar a inferência nem falar UART. O traço é rasterizado em 28x28 no próprio app e a API ponte no computador repassa a imagem à NPU.
 - [preencher após a PoC: acurácia nos 10 dígitos, tempo de resposta medido, FPGA ou simulado]
 - [preencher após a PoC: o que muda no TCC, por exemplo um modo de entrada pelo celular no GUI-TCC]

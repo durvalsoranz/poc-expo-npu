@@ -1,26 +1,26 @@
-# API ponte do Eureka
+# API ponte da NPU
 
-Servidor HTTP que roda no computador ligado à FPGA. Ele recebe o dígito desenhado no celular e o
-classifica na NPU, reaproveitando o código do Eureka (Digit-Tracker):
+Servidor HTTP que roda no computador (com a NPU simulada ou ligado à FPGA). Ele recebe o dígito desenhado no celular e o
+classifica na NPU, reaproveitando o código do Digit-Tracker:
 
-- `vision.to_npu_input`: o mesmo pré-processamento 28x28 do Eureka (recorte, traço com espessura
+- `vision.to_npu_input`: o mesmo pré-processamento 28x28 do Digit-Tracker (recorte, traço com espessura
   proporcional, encaixe em 20x20, centralização em 28x28, redução para int8 0..127);
 - `npu.CpuNpu` (simulado) e `npu.FpgaNpu` (placa por UART a 921600 baud).
 
-Só usa a biblioteca padrão do Python para o HTTP; as dependências são as do próprio Eureka.
+Só usa a biblioteca padrão do Python para o HTTP; as dependências são as do próprio Digit-Tracker.
 
 ## Estrutura esperada
 
 ```
 Dev/
 ├── Digit Tracker/
-│   └── digit-tracker/     ← Eureka (npu.py, vision.py, engine.py, weights.npz, firmware/)
+│   └── digit-tracker/     ← Digit-Tracker (npu.py, vision.py, engine.py, weights.npz, firmware/)
 └── poc-tcc/
     └── bridge/
-        └── servidor.py    ← procura o Eureka em ../../Digit Tracker/digit-tracker
+        └── servidor.py    ← procura o Digit-Tracker em ../../Digit Tracker/digit-tracker
 ```
 
-Se o Eureka estiver em outro lugar, use `--eureka "C:\caminho\para\digit-tracker"`.
+Se o Digit-Tracker estiver em outro lugar, use `--digit-tracker "C:\caminho\para\digit-tracker"`.
 
 ## Instalação (uma vez)
 
@@ -65,7 +65,7 @@ Ao iniciar, o servidor mostra o endereço para abrir no celular, por exemplo
 Corpo JSON com **uma** das duas formas:
 
 - `tracos`: lista de traços, cada um uma lista de pontos `[x, y]` em qualquer escala (pixels da
-  tela servem). O servidor aplica o pré-processamento do Eureka.
+  tela servem). O servidor aplica o pré-processamento do Digit-Tracker.
   ```json
   { "tracos": [[[150, 40], [150, 45], [151, 50]], [[120, 60], [180, 60]]] }
   ```
