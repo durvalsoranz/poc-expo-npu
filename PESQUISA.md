@@ -105,7 +105,10 @@ Marque `[x]` depois de abrir cada página e conferir o que está anotado acima. 
 - Como percebi: pedido de permissão para um `npm uninstall` que não estava no plano; confirmei pedindo ao agente a lista dos comandos executados.
 - O certo: só `npx expo install react-native-svg`. Desfiz pelo git (`git checkout package.json package-lock.json`) e reinstalei o pacote.
 
-## Resultado e próximos passos no TCC
-- Hipótese (a confirmar na PoC): o celular funciona como entrada da NPU sem rodar a inferência nem falar UART. O traço é rasterizado em 28x28 no próprio app e a API ponte no computador repassa a imagem à NPU.
-- [preencher após a PoC: acurácia nos 10 dígitos, tempo de resposta medido, FPGA ou simulado]
-- [preencher após a PoC: o que muda no TCC, por exemplo um modo de entrada pelo celular no GUI-TCC]
+## Resultado e próximos passos 
+- A prova de conceito demonstrou que o celular funciona como entrada da NPU sem rodar a inferência: o app Expo captura os traços com `react-native-svg` + `PanResponder` e os envia por `fetch` a uma API ponte no computador, que aplica o pré-processamento 28x28 do Digit-Tracker e chama a NPU simulada (`CpuNpu`).
+- Medições em iPhone com Expo Go, na rede local: média de 48 ms de ida e volta, dos quais cerca de 4,3 ms na NPU simulada. O restante é rede e processamento.
+- Acurácia: 9 de 10 dígitos corretos; o 9 é o dígito menos estável.
+- Falhas de rede são tratadas com timeout de 5 s (AbortController + setTimeout), mas o timeout só cancela a espera no app; a ponte continua processando.
+- Enviar os traços, e não a imagem, garantiu o mesmo pré-processamento do Digit-Tracker e simplificou o app.
+- Próximos passos: testar com a NPU na FPGA (`--port`), avaliar HTTPS para builds de produção (o iOS bloqueia HTTP puro fora do Expo Go) e considerar o celular como modo de entrada do GUI-TCC.
