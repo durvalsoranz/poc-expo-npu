@@ -8,6 +8,7 @@ desenho por HTTP e reaproveita o código do Digit-Tracker: o mesmo pré-processa
     python bridge/servidor.py --sim            # NPU emulada no computador (sem placa)
     python bridge/servidor.py                  # FPGA, porta detectada automaticamente
     python bridge/servidor.py --port COM4      # FPGA em uma porta específica
+    python bridge/servidor.py --sim --atraso 2 # responde 2 s mais tarde (teste de carregamento e timeout)
 
 Rotas:
     GET  /health  -> {"status": "ok", "backend": "simulado" | "FPGA", ...}
@@ -49,8 +50,9 @@ def ip_local():
 class Ponte:
     """Converte o desenho na entrada da NPU e chama o backend, um pedido por vez."""
 
-    def __init__(self, backend, nome_backend, np, to_npu_input, softmax_pct):
+    def __init__(self, backend, nome_backend, np, to_npu_input, softmax_pct, atraso_s=0.0):
         self.backend = backend
+        self.atraso_s = atraso_s  # atraso artificial antes de responder, só para testes
         self.nome_backend = nome_backend  # "FPGA" ou "simulado"
         self.np = np
         self.to_npu_input = to_npu_input
@@ -99,6 +101,9 @@ class Ponte:
             entrada, img28 = self.entrada_de_pixels(corpo["pixels"])
         else:
             raise ErroEntrada("Envie 'tracos' ou 'pixels' no corpo JSON.")
+
+        if self.atraso_s > 0:
+            time.sleep(self.atraso_s)  # fora da trava e fora do tempo_ms: simula rede ou servidor lento
 
         with self.trava:
             inicio = time.perf_counter()
@@ -183,6 +188,8 @@ def main():
     parser.add_argument("--digit-tracker", default=DIGIT_TRACKER_PADRAO, help="pasta do Digit-Tracker")
     parser.add_argument("--host", default="0.0.0.0", help="0.0.0.0 aceita conexões da rede local")
     parser.add_argument("--porta-http", type=int, default=8000)
+    parser.add_argument("--atraso", type=float, default=0.0,
+                        help="segundos de atraso antes de cada resposta do /infer (só para testes)")
     args = parser.parse_args()
 
     if not os.path.exists(os.path.join(args.digit_tracker, "npu.py")):
@@ -210,7 +217,7 @@ def main():
         backend, nome = FpgaNpu(porta, args.baud, firmware, weights, log=print), "FPGA"
         detalhe = f"{porta} @ {args.baud} baud"
 
-    ponte = Ponte(backend, nome, np, to_npu_input, softmax_pct)
+    ponte = Ponte(backend, nome, np, to_npu_input, softmax_pct, atraso_s=args.atraso)
     info_health = {"status": "ok", "backend": nome, "detalhe": detalhe}
     servidor = ThreadingHTTPServer((args.host, args.porta_http), criar_handler(ponte, info_health))
 
@@ -218,6 +225,8 @@ def main():
     print(f"\nPonte da NPU pronta [{nome}: {detalhe}]")
     print(f"  No computador: http://127.0.0.1:{args.porta_http}/health")
     print(f"  No celular:    http://{ip}:{args.porta_http}/health")
+    if args.atraso > 0:
+        print(f"  ATENÇÃO: atraso de teste de {args.atraso} s em cada /infer")
     print("Ctrl+C para encerrar.\n", flush=True)
     try:
         servidor.serve_forever()
