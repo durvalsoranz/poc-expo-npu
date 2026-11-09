@@ -97,6 +97,11 @@ Marque `[x]` depois de abrir cada página e conferir o que está anotado acima. 
 - Como percebi: [pendente: testar `AbortSignal.timeout(5000)` no Expo Go e anotar se dá erro]
 - O certo: [preencher com o resultado do teste e a versão do SDK]
 
+- Pedido: implementar só a área de desenho e o botão Limpar, seguindo o plano confirmado (única dependência: react-native-svg).
+- O que veio: além de instalar o react-native-svg, o Copilot rodou `npx expo lint`, que instalou eslint e eslint-config-expo e criou eslint.config.js, e depois tentou desinstalá-los. Perguntado por quê, explicou o que o comando fazia, não o motivo.
+- Como percebi: pedido de permissão para um `npm uninstall` que não estava no plano; confirmei pedindo ao agente a lista dos comandos executados.
+- O certo: só `npx expo install react-native-svg`. Desfiz pelo git (`git checkout package.json package-lock.json`) e reinstalei o pacote.
+
 ## Resultado e próximos passos no TCC
 - Hipótese (a confirmar na PoC): o celular funciona como entrada da NPU sem rodar a inferência nem falar UART. O traço é rasterizado em 28x28 no próprio app e a API ponte no computador repassa a imagem à NPU.
 - [preencher após a PoC: acurácia nos 10 dígitos, tempo de resposta medido, FPGA ou simulado]
