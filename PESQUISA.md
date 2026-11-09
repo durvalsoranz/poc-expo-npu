@@ -69,6 +69,8 @@ Conclusão: as quatro funcionam no Expo Go [doc]. A escolha de `react-native-svg
 3. **iOS também bloqueia HTTP puro.** A ponte na rede local provavelmente será `http://192.168...`; testar no iOS, não só no Android.
 4. **Alternativa ao NetInfo:** `expo-network`, citada na página do TanStack para o `onlineManager`.
 5. **Sem respaldo oficial até aqui:** `AbortController`/timeout no `fetch`, `AbortSignal.timeout()`, rasterização em JS, servidor desligado vs. NetInfo, permissão de rede local no iOS. Todos dependem do teste no aparelho.
+6. **MCP do Expo funcionou com conta gratuita.** A página do Expo MCP diz que exige plano pago do EAS; a apostila diz que basta conta gratuita. No teste de 09/11, as ferramentas "Expo Documentation Search" e "Read Expo Documentation Page" funcionaram com a conta durvalsoranz.
+7. **Recarregar o app após mudar constantes.** Depois de trocar o API_URL, o app continuou com o IP antigo e o fetch ficou pendurado sem erro. Resolvido com `r` no terminal do Expo. Mostra por que o timeout (critério 5) é necessário: sem ele, um endereço errado deixa o app esperando indefinidamente.
 
 ## Fontes oficiais lidas
 Marque `[x]` depois de abrir cada página e conferir o que está anotado acima. (Todas abertas e conferidas em 09/11/2026.)
