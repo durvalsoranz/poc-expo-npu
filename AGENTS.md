@@ -39,3 +39,23 @@ Docs: https://docs.expo.dev/eas/index.md
 - If `ios/` and `android/` directories do not exist, they are generated (Continuous Native Generation). Never create or edit them by hand — configure native behavior in `app.json` and config plugins.
 - Expo Go only includes its bundled native modules. After adding a library with native code, the app needs a development build: `npx expo run:ios|android` locally, or `eas build --profile development`.
 - Prefer recommended Expo modules over third-party libraries, and check your available skills before adding dependencies. Docs: https://docs.expo.dev/versions/latest/index.md
+
+## Convenções deste projeto
+
+- Não altere arquivos fora do escopo pedido. Explique cada alteração.
+- Componentes ficam em `components/`, um arquivo por componente.
+- Estado nunca é modificado no lugar: sempre gere um novo valor.
+- Valores que podem ser calculados a partir do estado não viram estado.
+- Antes de usar um pacote, confirme na documentação se ele funciona no Expo Go.
+
+## Contexto desta prova de conceito
+
+- TCC: plataforma educacional com um SoC RISC-V e uma NPU em FPGA, controlada por um app desktop PyQt5 (GUI-TCC). O Eureka (Digit-Tracker) reconhece dígitos desenhados no ar e os classifica na NPU por UART.
+- Problema: o celular não fala UART com a placa. A PoC investiga como um app Expo pode ser a entrada do Eureka, enviando o dígito desenhado a uma API ponte no computador e mostrando a predição da NPU.
+- Tecnologia investigada: desenho com `react-native-svg` + `PanResponder` e consumo de API com `fetch` (timeout com `AbortController`).
+- Uma tela só, em `App.tsx`: o usuário desenha um dígito com o dedo, toca em "Classificar" e vê o dígito previsto, o backend (FPGA ou simulado) e o tempo de resposta. Há também o botão "Limpar".
+- A imagem enviada é 28x28, em tons de cinza (0 a 255), como lista de 784 inteiros em JSON, com tinta clara sobre fundo escuro, igual ao MNIST. A rasterização é feita em JavaScript puro, sem bibliotecas nativas.
+- O endereço da API ponte fica em uma constante no topo do `App.tsx` (IP do computador na rede local, porta 8000).
+- A API ponte é um script Python separado, em `bridge/`, fora do app Expo. Não a reescreva dentro do app.
+- Não usar Expo Router, a menos que a tecnologia investigada seja a navegação.
+- Fora de escopo: login, design final, câmera, MediaPipe, Bluetooth e tudo que não demonstre a pergunta.
