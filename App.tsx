@@ -67,10 +67,13 @@ export default function App() {
     setRequestError(null);
     setIsLoading(true);
     const startedAt = Date.now();
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
 
     try {
       const response = await fetch(`${API_URL}/infer`, {
         method: 'POST',
+        signal: controller.signal,
         headers: {
           'Content-Type': 'application/json',
         },
@@ -106,8 +109,9 @@ export default function App() {
 
       setResult({ ...payload, roundTripMs });
     } catch {
-      setRequestError('Não foi possível conectar à API.');
+      setRequestError('Não foi possível alcançar o servidor');
     } finally {
+      clearTimeout(timeoutId);
       setIsLoading(false);
     }
   };

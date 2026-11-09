@@ -71,6 +71,7 @@ Conclusão: as quatro funcionam no Expo Go [doc]. A escolha de `react-native-svg
 5. **Sem respaldo oficial até aqui:** `AbortController`/timeout no `fetch`, `AbortSignal.timeout()`, rasterização em JS, servidor desligado vs. NetInfo, permissão de rede local no iOS. Todos dependem do teste no aparelho.
 6. **MCP do Expo funcionou com conta gratuita.** A página do Expo MCP diz que exige plano pago do EAS; a apostila diz que basta conta gratuita. No teste de 09/11, as ferramentas "Expo Documentation Search" e "Read Expo Documentation Page" funcionaram com a conta durvalsoranz.
 7. **Recarregar o app após mudar constantes.** Depois de trocar o API_URL, o app continuou com o IP antigo e o fetch ficou pendurado sem erro. Resolvido com `r` no terminal do Expo. Mostra por que o timeout (critério 5) é necessário: sem ele, um endereço errado deixa o app esperando indefinidamente.
+8. **O timeout cancela só a espera no app.** Com a ponte atrasada em 7 s, o app desiste aos 5 s e mostra o erro, mas a ponte conclui a inferência mesmo assim. Em uso real, uma NPU lenta continuaria processando pedidos que ninguém mais espera.
 
 ## Fontes oficiais lidas
 Marque `[x]` depois de abrir cada página e conferir o que está anotado acima. (Todas abertas e conferidas em 09/11/2026.)
