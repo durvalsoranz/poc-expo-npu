@@ -1,41 +1,57 @@
-# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
-
-# dependencies
+# ====================================================
+# Node & Dependências
+# ====================================================
 node_modules/
+npm-debug.*
+yarn-debug.*
+yarn-error.*
 
-# Expo
+# ====================================================
+# Expo & Metro Bundler
+# ====================================================
 .expo/
 dist/
 web-build/
 expo-env.d.ts
+.metro-health-check*
 
-# Native
+# ====================================================
+# Pastas Nativas (Geradas pelo Expo)
+# ====================================================
+/ios
+/android
 .kotlin/
+
+# ====================================================
+# Chaves e Certificados (Segurança)
+# ====================================================
 *.orig.*
 *.jks
 *.p8
 *.p12
 *.key
 *.mobileprovision
-
-# Metro
-.metro-health-check*
-
-# debug
-npm-debug.*
-yarn-debug.*
-yarn-error.*
-
-# macOS
-.DS_Store
 *.pem
 
-# local env files
+# ====================================================
+# API Ponte (Python / FastAPI)
+# ====================================================
+bridge/.venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# ====================================================
+# Configurações de Ambiente
+# ====================================================
 .env*.local
 
-# typescript
+# ====================================================
+# TypeScript
+# ====================================================
 *.tsbuildinfo
 
-# generated native folders
-/ios
-/android
+# ====================================================
+# Sistema Operacional
+# ====================================================
+.DS_Store
